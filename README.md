@@ -28,8 +28,8 @@
 Criação do schema e tabelas.
 ```SQL
 -- Criação do schema
-CREATE SCHEMA IF NOT EXISTS meu_banco_de_dados;
-USE meu_banco_de_dados;
+CREATE SCHEMA IF NOT EXISTS imobiliaria;
+USE imobiliaria;
 
 -- tabela CLIENTE
 CREATE TABLE cliente (
