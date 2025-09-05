@@ -84,28 +84,50 @@ public class ContratoDAO {
     }
 
     // Encerrar (dar baixa) num contrato e liberar o imóvel manualmente (opcional)
-    public void encerrarContrato(int idContrato) throws SQLException {
+    public boolean encerrarContrato(int idContrato) throws SQLException {
         String sqlBusca = "SELECT id_imovel FROM contrato WHERE id_contrato = ?";
-        String sqlUpdateImovel = "UPDATE imovel SET disponivel = TRUE WHERE id_imovel = ?";
+        String sqlDelete = "DELETE FROM contrato WHERE id_contrato = ?";
+        String sqlUpdateImovel = "UPDATE imovel SET disponivel = 1 WHERE id_imovel = ?";
+
         try (Connection conn = DB.getConnection()) {
             conn.setAutoCommit(false);
             Integer idImovel = null;
+
+            // Busca o id do imóvel relacionado ao contrato
             try (PreparedStatement ps = conn.prepareStatement(sqlBusca)) {
                 ps.setInt(1, idContrato);
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) idImovel = rs.getInt("id_imovel");
+                    if (rs.next()) {
+                        idImovel = rs.getInt("id_imovel");
+                    } else {
+                        System.out.println("Contrato não encontrado: " + idContrato);
+                        return false; // Nada para deletar
+                    }
                 }
             }
+
+            // Libera o imóvel
             if (idImovel != null) {
                 try (PreparedStatement ps = conn.prepareStatement(sqlUpdateImovel)) {
                     ps.setInt(1, idImovel);
                     ps.executeUpdate();
                 }
             }
+
+            // Remove o contrato
+            try (PreparedStatement ps = conn.prepareStatement(sqlDelete)) {
+                ps.setInt(1, idContrato);
+                ps.executeUpdate();
+            }
+
             conn.commit();
+            System.out.println("Contrato encerrado e removido com sucesso!");
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
         }
     }
-
     private Contrato map(ResultSet rs) throws SQLException {
         return new Contrato(
                 rs.getInt("id_contrato"),
